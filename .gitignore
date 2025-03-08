@@ -1,0 +1,63 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Cython 和编译文件
+*.so
+*.o
+*.pyd
+*.dll
+
+# Virtual environment (虚拟环境)
+venv/
+env/
+ENV/
+*.venv
+*.virtualenv
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# 配置、日志和临时文件
+*.log
+*.tmp
+*.bak
+.DS_Store
+*.swp
+*.swo
+
+# IDE & 编辑器文件
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Python Package
+dist/
+build/
+*.egg-info/
+pip-wheel-metadata/
+
+# 缓存文件
+__pycache__/
+.cache/
+*.pyc
+*.pyo
+
+# 单元测试 & 覆盖率报告
+.coverage
+htmlcov/
+nosetests.xml
+coverage.xml
+*.cover
+*.coverage
+
+# 数据库文件
+*.sqlite3
+*.db
+
+# 环境变量
+.env
+*.secrets
+config.yaml
