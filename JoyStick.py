@@ -2,6 +2,7 @@ import pygame.joystick
 import time
 import threading
 
+
 class JoyStick:
     def __init__(self):
         self.available = self.init()
@@ -29,8 +30,13 @@ class JoyStick:
         # 处理事件队列，必要时更新状态
         pygame.event.pump()
         with self.lock:
-            self.axes = [self.joystick.get_axis(i) for i in range(self.joystick.get_numaxes())]
-            self.buttons = [self.joystick.get_button(i) for i in range(self.joystick.get_numbuttons())]
+            self.axes = [
+                self.joystick.get_axis(i) for i in range(self.joystick.get_numaxes())
+            ]
+            self.buttons = [
+                self.joystick.get_button(i)
+                for i in range(self.joystick.get_numbuttons())
+            ]
             self.hats = list(self.joystick.get_hat(0))
 
     def get(self):
@@ -39,22 +45,24 @@ class JoyStick:
                 "available": True,
                 "axes": self.axes,
                 "buttons": self.buttons,
-                "hats": self.hats
+                "hats": self.hats,
             }
-    
+
     def get_used(self):
         with self.lock:
             return {
                 "available": True,
                 "axes": self.axes[:6],
                 "buttons": self.buttons[:8],
-                "hats": self.hats
+                "hats": self.hats,
             }
+
 
 def get_joystick():
     joystick_instance = JoyStick()
     joystick_instance.update()
     return joystick_instance.get()
+
 
 if __name__ == "__main__":
     joystick_instance = JoyStick()
@@ -62,3 +70,4 @@ if __name__ == "__main__":
         time.sleep(0.01)
         joystick_instance.update()
         print(type(joystick_instance.get()))
+
