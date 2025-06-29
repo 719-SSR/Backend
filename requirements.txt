@@ -12,10 +12,15 @@ graphql-server-core==1.2.0
 itsdangerous==2.2.0
 Jinja2==3.1.6
 MarkupSafe==3.0.2
+numpy==2.2.4
+opencv-python==4.11.0.86
+pip==25.0.1
 promise==2.3
+pupil-pthreads-win==2
 pygame==2.6.1
 pyserial==3.5
 Rx==1.6.3
+setuptools==76.0.0
 six==1.17.0
 waitress==3.0.2
 Werkzeug==3.1.3

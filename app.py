@@ -5,50 +5,53 @@ from flask_cors import CORS
 from waitress import serve
 
 import graphene
-from graphene import ObjectType, String, Int, JSONString, Float
 
-import json
 
 import threading
 
 import time
 
 import JoyStick
+import Client
 import Serial
+# import Serial
 
 
 joystick_instance = JoyStick.JoyStick()
-port = Serial.choose_serial_port()
-serial_instance = Serial.SerialProtocolHandler(port, 115200)
+serial_instance = Serial.SerialProtocolHandler(Serial.choose_serial_port(), 115200)
 
 
-class JoystickField(ObjectType):
+class JoystickField(graphene.ObjectType):
     available = graphene.Boolean()
     axes = graphene.List(graphene.Float)
     buttons = graphene.List(graphene.Int)
     hats = graphene.List(graphene.Int)
 
 
-class AttitudeField(ObjectType):
+class AtitudeField(graphene.ObjectType):
+    available = graphene.Boolean()
     pitch = graphene.Float()
     roll = graphene.Float()
     yaw = graphene.Float()
 
 
-class JointField(ObjectType):
+class JointField(graphene.ObjectType):
+    available = graphene.Boolean()
     left_thruster_joint = graphene.Float()
     right_thruster_joint = graphene.Float()
     end_joint_2 = graphene.Float()
     end_joint_1 = graphene.Float()
 
 
-class Query(ObjectType):
+class Query(graphene.ObjectType):
     joystick = graphene.Field(JoystickField)
-    attitude = graphene.Field(AttitudeField)
+    altitude = graphene.Field(AtitudeField)
     joint = graphene.Field(JointField)
     depth = graphene.Float()
+    temperature = graphene.Float()
 
     def resolve_joystick(self, info):
+        del info
         global joystick_instance
 
         if not joystick_instance.available:
@@ -58,22 +61,25 @@ class Query(ObjectType):
         data = joystick_instance.get()
         return data
 
-    def resolve_attitude(self, info):
+    def resolve_altitude(self, info):
+        del info
         global serial_instance
         data = serial_instance.get_data(Serial.Data.ATTITUDE)
         available = data[1]
         if not available:
-            return {"pitch": 0, "roll": 0, "yaw": 0}
+            return {"available": False, "pitch": 0, "roll": 0, "yaw": 0}
 
         data = data[0]
-        return {"pitch": data[1], "roll": data[0], "yaw": data[2]}
+        return {"available": True, "pitch": data[1], "roll": data[0], "yaw": data[2]}
 
     def resolve_joint(self, info):
+        del info
         global serial_instance
         data = serial_instance.get_data(Serial.Data.SERVO)
         available = data[1]
         if not available:
             return {
+                "available": False,
                 "left_thruster_joint": 0,
                 "right_thruster_joint": 0,
                 "end_joint_2": 0,
@@ -81,6 +87,7 @@ class Query(ObjectType):
             }
         data = data[0]
         return {
+            "available": True,
             "left_thruster_joint": data[0],
             "right_thruster_joint": data[1],
             "end_joint_2": data[2],
@@ -88,8 +95,18 @@ class Query(ObjectType):
         }
 
     def resolve_depth(self, info):
+        del info
         global serial_instance
         data = serial_instance.get_data(Serial.Data.DEPTH)
+        available = data[1]
+        if not available:
+            return 0
+        return data[0][0]
+
+    def resolve_temperature(self, info):
+        del info
+        global serial_instance
+        data = serial_instance.get_data(Serial.Data.TEMPERATURE)
         available = data[1]
         if not available:
             return 0
