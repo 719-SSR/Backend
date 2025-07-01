@@ -6,19 +6,19 @@ from waitress import serve
 
 import graphene
 
-
 import threading
 
 import time
 
+import json
+
 import JoyStick
 import Client
-import Serial
-# import Serial
+# import Client
 
 
 joystick_instance = JoyStick.JoyStick()
-serial_instance = Serial.SerialProtocolHandler(Serial.choose_serial_port(), 115200)
+client_instance = Client.UDPClient("192.168.1.101", 4567)
 
 
 class JoystickField(graphene.ObjectType):
@@ -63,8 +63,8 @@ class Query(graphene.ObjectType):
 
     def resolve_altitude(self, info):
         del info
-        global serial_instance
-        data = serial_instance.get_data(Serial.Data.ATTITUDE)
+        global client_instance
+        data = client_instance.get_data(Client.Data.ATTITUDE)
         available = data[1]
         if not available:
             return {"available": False, "pitch": 0, "roll": 0, "yaw": 0}
@@ -74,8 +74,8 @@ class Query(graphene.ObjectType):
 
     def resolve_joint(self, info):
         del info
-        global serial_instance
-        data = serial_instance.get_data(Serial.Data.SERVO)
+        global client_instance
+        data = client_instance.get_data(Client.Data.SERVO)
         available = data[1]
         if not available:
             return {
@@ -96,8 +96,8 @@ class Query(graphene.ObjectType):
 
     def resolve_depth(self, info):
         del info
-        global serial_instance
-        data = serial_instance.get_data(Serial.Data.DEPTH)
+        global client_instance
+        data = client_instance.get_data(Client.Data.DEPTH)
         available = data[1]
         if not available:
             return 0
@@ -105,8 +105,8 @@ class Query(graphene.ObjectType):
 
     def resolve_temperature(self, info):
         del info
-        global serial_instance
-        data = serial_instance.get_data(Serial.Data.TEMPERATURE)
+        global client_instance
+        data = client_instance.get_data(Client.Data.TEMPERATURE)
         available = data[1]
         if not available:
             return 0
@@ -127,11 +127,11 @@ app.add_url_rule(
 )
 
 
-def serialReceive():
-    global serial_instance
-    while True:
-        serial_instance.receive_data()
-        time.sleep(0.01)
+# def serialReceive():
+#     global client_instance
+#     while True:
+#         client_instance.receive_data()
+#         time.sleep(0.01)
 
 
 if __name__ == "__main__":
@@ -139,6 +139,15 @@ if __name__ == "__main__":
         target=serve, kwargs={"app": app, "host": "0.0.0.0", "port": 5000}, daemon=True
     )
     app_thread.start()
+
+    def on_recv(self, data, addr):
+        print(f"Received from {addr}: {data}")
+        type = json.loads(data.decode("utf-8")).get("type", "str")
+        self.data[type] = data
+    client_instance.start(on_recv)
     while True:
         time.sleep(0.01)
         joystick_instance.update()
+        joystick_data = joystick_instance.get()
+
+
